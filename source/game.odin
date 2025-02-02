@@ -28,16 +28,31 @@ created.
 package game
 
 import "core:fmt"
-import "core:math/linalg"
+import mu "vendor:microui"
 import rl "vendor:raylib"
 
-PIXEL_WINDOW_HEIGHT :: 180
 
+_ :: fmt
+Vec2 :: rl.Vector2
+Rect :: rl.Rectangle
+
+MAX_BULLETS :: 50
+INIT_ENEMIES_COUNT :: 10
+PIXEL_WINDOW_HEIGHT :: 800
+
+Mu_State :: struct {
+	atlas_texture: rl.Texture2D,
+	bg:            mu.Color,
+	mu_ctx:        mu.Context,
+}
 Game_Memory :: struct {
-	player_pos: rl.Vector2,
-	player_texture: rl.Texture,
+	showDebug:   bool,
+	player:      Player,
+	bullets:     [MAX_BULLETS]^Bullet,
+	enemies:     [dynamic]Enemy,
 	some_number: int,
-	run: bool,
+	run:         bool,
+	mu_state:    Mu_State,
 }
 
 g_mem: ^Game_Memory
@@ -46,38 +61,27 @@ game_camera :: proc() -> rl.Camera2D {
 	w := f32(rl.GetScreenWidth())
 	h := f32(rl.GetScreenHeight())
 
-	return {
-		zoom = h/PIXEL_WINDOW_HEIGHT,
-		target = g_mem.player_pos,
-		offset = { w/2, h/2 },
-	}
+	return {zoom = h / PIXEL_WINDOW_HEIGHT, target = g_mem.player.pos, offset = {w / 2, h / 2}}
 }
 
 ui_camera :: proc() -> rl.Camera2D {
-	return {
-		zoom = f32(rl.GetScreenHeight())/PIXEL_WINDOW_HEIGHT,
-	}
+	// return {zoom = f32(rl.GetScreenHeight()) / PIXEL_WINDOW_HEIGHT}
+	return {zoom = 3.0}
 }
 
 update :: proc() {
-	input: rl.Vector2
+	dt := rl.GetFrameTime()
 
-	if rl.IsKeyDown(.UP) || rl.IsKeyDown(.W) {
-		input.y -= 1
-	}
-	if rl.IsKeyDown(.DOWN) || rl.IsKeyDown(.S) {
-		input.y += 1
-	}
-	if rl.IsKeyDown(.LEFT) || rl.IsKeyDown(.A) {
-		input.x -= 1
-	}
-	if rl.IsKeyDown(.RIGHT) || rl.IsKeyDown(.D) {
-		input.x += 1
+	if rl.IsKeyPressed(.F2) {
+		g_mem.showDebug = !g_mem.showDebug
 	}
 
-	input = linalg.normalize0(input)
-	g_mem.player_pos += input * rl.GetFrameTime() * 100
-	g_mem.some_number += 1
+
+	{
+		update_player(&g_mem.player, dt)
+		update_all_bullets(dt)
+		update_all_enemies(dt)
+	}
 
 	if rl.IsKeyPressed(.ESCAPE) {
 		g_mem.run = false
@@ -86,38 +90,57 @@ update :: proc() {
 
 draw :: proc() {
 	rl.BeginDrawing()
+	defer rl.EndDrawing()
+
 	rl.ClearBackground(rl.BLACK)
 
-	rl.BeginMode2D(game_camera())
-	rl.DrawTextureEx(g_mem.player_texture, g_mem.player_pos, 0, 1, rl.WHITE)
-	rl.DrawRectangleV({20, 20}, {10, 10}, rl.RED)
-	rl.DrawRectangleV({-30, -20}, {10, 10}, rl.GREEN)
-	rl.EndMode2D()
+	{ 	// World
+		rl.BeginMode2D(game_camera())
+		defer rl.EndMode2D()
+		draw_player(g_mem.player)
 
-	rl.BeginMode2D(ui_camera())
+		// rl.DrawRectangleV({20, 20}, {10, 10}, rl.RED)
+		// rl.DrawRectangleV({-30, -20}, {10, 10}, rl.GREEN)
+		draw_all_bullets()
+		draw_all_enemies()
+	}
 
-	// NOTE: `fmt.ctprintf` uses the temp allocator. The temp allocator is
-	// cleared at the end of the frame by the main application, meaning inside
-	// `main_hot_reload.odin`, `main_release.odin` or `main_web_entry.odin`.
-	rl.DrawText(fmt.ctprintf("some_number: %v\nplayer_pos: %v", g_mem.some_number, g_mem.player_pos), 5, 5, 8, rl.WHITE)
+	{ 	// Camera
+		rl.BeginMode2D(ui_camera())
+		defer rl.EndMode2D()
 
-	rl.EndMode2D()
+		draw_player_ui(g_mem.player)
 
-	rl.EndDrawing()
+		// screenDim := GetCameraScreenDimension(ui_camera())
+		// RED LINES
+		// rl.DrawLine(i32(0), i32(screenDim.y / 2), i32(screenDim.x), i32(screenDim.y / 2), rl.RED)
+	}
+	if g_mem.showDebug {
+		screenDim := GetScreenDimension()
+		tRPos := getScreenPos(.Top_Right, Vec2(20))
+
+		rl.DrawText("DEBUG IS ON", i32(screenDim.x / 2), 0, 50, rl.ORANGE)
+		rl.DrawFPS(i32(tRPos.x / 2), i32(tRPos.y + 50))
+		mu_draw()
+	}
 }
+
 
 @(export)
 game_update :: proc() {
+	mu_update()
+
 	update()
 	draw()
+
 }
 
 @(export)
 game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
-	rl.InitWindow(1280, 720, "Odin + Raylib + Hot Reload template!")
+	rl.InitWindow(1920, 1080, "Odin + Raylib + Hot Reload template!")
 	rl.SetWindowPosition(200, 200)
-	rl.SetTargetFPS(500)
+	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
 }
 
@@ -125,14 +148,23 @@ game_init_window :: proc() {
 game_init :: proc() {
 	g_mem = new(Game_Memory)
 
-	g_mem^ = Game_Memory {
-		run = true,
-		some_number = 100,
 
-		// You can put textures, sounds and music in the `assets` folder. Those
-		// files will be part any release or web build.
-		player_texture = rl.LoadTexture("assets/round_cat.png"),
+	g_mem^ = Game_Memory {
+		run       = true,
+		mu_state  = init_microui(),
+		showDebug = false,
+		player    = init_player(),
 	}
+	for i in 0 ..= MAX_BULLETS - 1 {
+		g_mem.bullets[i] = new(Bullet)
+	}
+
+
+	mu.init(&g_mem.mu_state.mu_ctx)
+	g_mem.mu_state.mu_ctx.text_width = mu.default_atlas_text_width
+	g_mem.mu_state.mu_ctx.text_height = mu.default_atlas_text_height
+
+	init_n_enemies()
 
 	game_hot_reloaded(g_mem)
 }
@@ -151,6 +183,10 @@ game_should_run :: proc() -> bool {
 
 @(export)
 game_shutdown :: proc() {
+	rl.UnloadTexture(g_mem.mu_state.atlas_texture)
+	for i in 0 ..= MAX_BULLETS - 1 {
+		free(g_mem.bullets[i])
+	}
 	free(g_mem)
 }
 
