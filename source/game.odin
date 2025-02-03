@@ -37,6 +37,7 @@ Vec2 :: rl.Vector2
 Rect :: rl.Rectangle
 
 MAX_BULLETS :: 50
+MAX_ENEMIES :: 50
 INIT_ENEMIES_COUNT :: 10
 PIXEL_WINDOW_HEIGHT :: 800
 
@@ -46,13 +47,14 @@ Mu_State :: struct {
 	mu_ctx:        mu.Context,
 }
 Game_Memory :: struct {
-	showDebug:   bool,
-	player:      Player,
-	bullets:     [MAX_BULLETS]^Bullet,
-	enemies:     [dynamic]Enemy,
-	some_number: int,
-	run:         bool,
-	mu_state:    Mu_State,
+	showDebug:         bool,
+	player:            Player,
+	countEnemiesAlive: i32,
+	bullets:           [MAX_BULLETS]^Bullet,
+	enemies:           [MAX_ENEMIES]^Enemy,
+	some_number:       int,
+	run:               bool,
+	mu_state:          Mu_State,
 }
 
 g_mem: ^Game_Memory
@@ -76,6 +78,10 @@ update :: proc() {
 		g_mem.showDebug = !g_mem.showDebug
 	}
 
+	{
+
+		respawn_enemy()
+	}
 
 	{
 		update_player(&g_mem.player, dt)
@@ -97,12 +103,12 @@ draw :: proc() {
 	{ 	// World
 		rl.BeginMode2D(game_camera())
 		defer rl.EndMode2D()
-		draw_player(g_mem.player)
 
 		// rl.DrawRectangleV({20, 20}, {10, 10}, rl.RED)
 		// rl.DrawRectangleV({-30, -20}, {10, 10}, rl.GREEN)
 		draw_all_bullets()
 		draw_all_enemies()
+		draw_player(g_mem.player)
 	}
 
 	{ 	// Camera
@@ -158,13 +164,16 @@ game_init :: proc() {
 	for i in 0 ..= MAX_BULLETS - 1 {
 		g_mem.bullets[i] = new(Bullet)
 	}
+	for i in 0 ..= MAX_ENEMIES - 1 {
+		g_mem.enemies[i] = new(Enemy)
+	}
 
 
 	mu.init(&g_mem.mu_state.mu_ctx)
 	g_mem.mu_state.mu_ctx.text_width = mu.default_atlas_text_width
 	g_mem.mu_state.mu_ctx.text_height = mu.default_atlas_text_height
 
-	init_n_enemies()
+	init_enemies()
 
 	game_hot_reloaded(g_mem)
 }
@@ -186,6 +195,9 @@ game_shutdown :: proc() {
 	rl.UnloadTexture(g_mem.mu_state.atlas_texture)
 	for i in 0 ..= MAX_BULLETS - 1 {
 		free(g_mem.bullets[i])
+	}
+	for i in 0 ..= MAX_ENEMIES - 1 {
+		free(g_mem.enemies[i])
 	}
 	free(g_mem)
 }

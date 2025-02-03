@@ -15,7 +15,7 @@ Bullet :: struct {
 
 getNextBulletId :: proc() -> int {
 	@(static) BID := 0
-	maxId := cap(g_mem.bullets)
+	maxId := MAX_BULLETS
 
 	BID += 1
 	return BID % maxId
@@ -48,9 +48,11 @@ update_bullet :: proc(bullet: ^Bullet, dt: f32) {
 		return
 	}
 	for &e in g_mem.enemies {
-		if rl.CheckCollisionRecs(enemy_getRect(e), bullet_getRect(bullet^)) {
-			e.health -= 5
-			despawn_bullet(bullet)
+		if e.alive {
+			if rl.CheckCollisionRecs(enemy_getRect(e^), bullet_getRect(bullet^)) {
+				e.health -= 5
+				despawn_bullet(bullet)
+			}
 		}
 	}
 

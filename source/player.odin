@@ -22,7 +22,7 @@ Player :: struct {
 
 
 init_player :: proc() -> Player {
-	bInterval: f32 = .500
+	bInterval: f32 = .200
 	return Player {
 		pos               = Vec2(2),
 		size              = 20,
@@ -80,6 +80,11 @@ player_get_speed :: proc(player: Player) -> f32 {
 	return player.speed * (player.isSprinting ? player.sprintingMulti : 1.0)
 }
 
+player_center :: proc(player: Player) -> Vec2 {
+
+	return {player.pos.x + (player.size / 2), player.pos.y + (player.size / 2)}
+
+}
 
 update_player :: proc(player: ^Player, dt: f32) {
 	pInput := handle_player_input(player)
@@ -90,7 +95,7 @@ update_player :: proc(player: ^Player, dt: f32) {
 	if player.shooting && player.readyToShoot {
 		player.readyToShoot = false
 		mPos := rl.GetScreenToWorld2D({f32(rl.GetMouseX()), f32(rl.GetMouseY())}, game_camera())
-		spawn_bullet(g_mem.player.pos, linalg.normalize0(mPos - g_mem.player.pos), 6)
+		spawn_bullet(player_center(g_mem.player), linalg.normalize0(mPos - g_mem.player.pos), 6)
 
 	}
 }
