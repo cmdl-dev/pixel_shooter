@@ -46,12 +46,15 @@ Mu_State :: struct {
 	bg:            mu.Color,
 	mu_ctx:        mu.Context,
 }
+
+
 Game_Memory :: struct {
 	showDebug:         bool,
 	player:            Player,
 	countEnemiesAlive: i32,
 	bullets:           [MAX_BULLETS]^Bullet,
 	enemies:           [MAX_ENEMIES]^Enemy,
+	particles:         [500]Particle,
 	some_number:       int,
 	run:               bool,
 	mu_state:          Mu_State,
@@ -79,7 +82,6 @@ update :: proc() {
 	}
 
 	{
-
 		respawn_enemy()
 	}
 
@@ -87,6 +89,7 @@ update :: proc() {
 		update_player(&g_mem.player, dt)
 		update_all_bullets(dt)
 		update_all_enemies(dt)
+		update_all_particles(dt)
 	}
 
 	if rl.IsKeyPressed(.ESCAPE) {
@@ -108,6 +111,7 @@ draw :: proc() {
 		// rl.DrawRectangleV({-30, -20}, {10, 10}, rl.GREEN)
 		draw_all_bullets()
 		draw_all_enemies()
+		draw_all_particles()
 		draw_player(g_mem.player)
 	}
 
@@ -145,7 +149,7 @@ game_update :: proc() {
 game_init_window :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1920, 1080, "Odin + Raylib + Hot Reload template!")
-	rl.SetWindowPosition(200, 200)
+	rl.SetWindowPosition(0, 20)
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(nil)
 }

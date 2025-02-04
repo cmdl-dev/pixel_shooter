@@ -20,9 +20,8 @@ Player :: struct {
 	readyToShoot:      bool,
 }
 
-
 init_player :: proc() -> Player {
-	bInterval: f32 = .200
+	bInterval: f32 = .100
 	return Player {
 		pos               = Vec2(2),
 		size              = 20,
@@ -64,7 +63,6 @@ handle_player_input :: proc(player: ^Player) -> (input: Vec2) {
 
 	// Player Shooting 
 	if !player.readyToShoot {
-
 		onFrameDelay(
 			&player._bulletInterval,
 			player.maxBulletInterval,

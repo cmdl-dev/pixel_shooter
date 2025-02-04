@@ -1,7 +1,6 @@
 package game
 
 import "core:math/linalg"
-
 import rl "vendor:raylib"
 
 Bullet :: struct {
@@ -27,7 +26,7 @@ spawn_bullet :: proc(pos: Vec2, direction: Vec2, size: f32) {
 		size      = {size, size},
 		direction = direction,
 		pos       = pos,
-		velocity  = 400,
+		velocity  = 1000,
 		isAlive   = true,
 		lifeTime  = rl.GetTime() + 5,
 	}
@@ -50,7 +49,8 @@ update_bullet :: proc(bullet: ^Bullet, dt: f32) {
 	for &e in g_mem.enemies {
 		if e.alive {
 			if rl.CheckCollisionRecs(enemy_getRect(e^), bullet_getRect(bullet^)) {
-				e.health -= 5
+				e.health -= 30
+				spawn_bunch_particles(20, bullet.pos)
 				despawn_bullet(bullet)
 			}
 		}
