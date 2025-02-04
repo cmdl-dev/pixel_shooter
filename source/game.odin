@@ -147,7 +147,7 @@ game_update :: proc() {
 
 @(export)
 game_init_window :: proc() {
-	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT, .MSAA_4X_HINT})
 	rl.InitWindow(1920, 1080, "Odin + Raylib + Hot Reload template!")
 	rl.SetWindowPosition(0, 20)
 	rl.SetTargetFPS(60)

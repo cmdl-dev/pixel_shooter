@@ -20,14 +20,15 @@ init_particle :: proc(pos: Vec2) -> Particle {
 	return Particle {
 		timeAlive = .200,
 		opacity = 1,
-		size = 3,
+		size = 4,
 		position = pos,
-		velocity = {rand.float32_range(-5, 5), rand.float32_range(-5, 5)},
+		velocity = {rand.float32_range(-10, 10), rand.float32_range(-10, 10)},
 		acc = {0, 0.5},
 	}
 }
 
 update_particle :: proc(p: ^Particle, dt: f32) {
+	// 1 Being the amount of frame that we want to remo
 	p.timeAlive -= dt
 
 	p.velocity += p.acc
