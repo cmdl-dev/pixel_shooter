@@ -81,16 +81,19 @@ mu_windows :: proc(ctx: ^mu.Context) {
 		opts,
 	) {
 
-		if .ACTIVE in mu.header(ctx, "Player Info") {
+		if .ACTIVE in mu.header(ctx, "Player Info", mu.Options{.AUTO_SIZE}) {
 			player := g_mem.player
 			// win := mu.get_current_container(ctx)
-			mu.layout_row(ctx, {54, -1}, 0)
+			mu.layout_row(ctx, {0, -1}, 0)
 			mu.label(ctx, "Position:")
 			mu.label(ctx, fmt.tprintf("%f, %f", player.pos.x, player.pos.y))
 			mu.label(ctx, "Speed:")
 			mu.label(ctx, fmt.tprintf("%f", player_get_speed(player)))
 			mu.label(ctx, "Size:")
 			mu.label(ctx, fmt.tprintf("%f", player.size))
+
+			mu.label(ctx, "Toggle Cursor Line")
+			mu.checkbox(ctx, "", &g_mem.debugInfo.showLineToCursor)
 		}
 	}
 	// if mu.window(ctx, "Test Window", {350, 40, 200, 200}, opts) {
@@ -104,19 +107,19 @@ mu_windows :: proc(ctx: ^mu.Context) {
 	// 		mu.label(ctx, fmt.tprintf("%d, %d", win.rect.w, win.rect.h))
 	// 	}
 
-	// 	if .ACTIVE in mu.header(ctx, "Window Options") {
-	// 		mu.layout_row(ctx, {120, 120, 120}, 0)
-	// 		for opt in mu.Opt {
-	// 			state := opt in opts
-	// 			if .CHANGE in mu.checkbox(ctx, fmt.tprintf("Label: %v", opt), &state) {
-	// 				if state {
-	// 					opts += {opt}
-	// 				} else {
-	// 					opts -= {opt}
-	// 				}
+	// if .ACTIVE in mu.header(ctx, "Window Options") {
+	// 	mu.layout_row(ctx, {120, 120, 120}, 0)
+	// 	for opt in mu.Opt {
+	// 		state := opt in opts
+	// 		if .CHANGE in mu.checkbox(ctx, fmt.tprintf("Label: %v", opt), &state) {
+	// 			if state {
+	// 				opts += {opt}
+	// 			} else {
+	// 				opts -= {opt}
 	// 			}
 	// 		}
 	// 	}
+	// }
 	// }
 }
 

@@ -1,5 +1,6 @@
 package game
 
+import "core:math"
 import rl "vendor:raylib"
 
 GetScreenDimension :: proc() -> Vec2 {
@@ -62,3 +63,22 @@ onFrameDelayWithArgs :: proc(timer: ^f32, maxTimer: f32, cb: proc(_: $T), args: 
 		cb(args)
 	}
 }
+rotateVector :: proc(v: Vec2, angle: f32) -> Vec2 {
+
+	rad := angle * math.RAD_PER_DEG
+	cosA := math.cos(rad)
+	sinA := math.sin(rad)
+	return Vec2{v.x * cosA - v.y * sinA, v.x * sinA + v.y * cosA}
+
+}
+// Vector2 RotateVector(Vector2 v, float angle)
+// {
+//     float rad = angle * DEG2RAD;
+//     float cosA = cosf(rad);
+//     float sinA = sinf(rad);
+
+//     return (Vector2){
+//         v.x * cosA - v.y * sinA,
+//         v.x * sinA + v.y * cosA
+//     };
+// }

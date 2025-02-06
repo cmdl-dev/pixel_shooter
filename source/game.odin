@@ -47,6 +47,10 @@ Mu_State :: struct {
 	mu_ctx:        mu.Context,
 }
 
+DebugInfo :: struct {
+	showLineToCursor: bool,
+}
+
 
 Game_Memory :: struct {
 	showDebug:         bool,
@@ -58,6 +62,7 @@ Game_Memory :: struct {
 	some_number:       int,
 	run:               bool,
 	mu_state:          Mu_State,
+	debugInfo:         DebugInfo,
 }
 
 g_mem: ^Game_Memory
@@ -113,6 +118,10 @@ draw :: proc() {
 		draw_all_enemies()
 		draw_all_particles()
 		draw_player(g_mem.player)
+		if g_mem.debugInfo.showLineToCursor {
+			outVect := rl.GetScreenToWorld2D(rl.GetMousePosition(), game_camera())
+			rl.DrawLineV(player_center(g_mem.player), outVect, rl.RED)
+		}
 	}
 
 	{ 	// Camera
@@ -131,6 +140,7 @@ draw :: proc() {
 
 		rl.DrawText("DEBUG IS ON", i32(screenDim.x / 2), 0, 50, rl.ORANGE)
 		rl.DrawFPS(i32(tRPos.x / 2), i32(tRPos.y + 50))
+
 		mu_draw()
 	}
 }
@@ -160,10 +170,11 @@ game_init :: proc() {
 
 
 	g_mem^ = Game_Memory {
-		run       = true,
-		mu_state  = init_microui(),
+		run = true,
+		mu_state = init_microui(),
 		showDebug = false,
-		player    = init_player(),
+		player = init_player(),
+		debugInfo = {showLineToCursor = false},
 	}
 	for i in 0 ..= MAX_BULLETS - 1 {
 		g_mem.bullets[i] = new(Bullet)
