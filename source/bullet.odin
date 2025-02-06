@@ -50,7 +50,7 @@ update_bullet :: proc(bullet: ^Bullet, dt: f32) {
 		if e.alive {
 			if rl.CheckCollisionRecs(enemy_getRect(e^), bullet_getRect(bullet^)) {
 				e.health -= 30
-				spawn_bunch_particles(20, bullet.pos)
+				spawn_bunch_particles(5, bullet.pos)
 				despawn_bullet(bullet)
 			}
 		}

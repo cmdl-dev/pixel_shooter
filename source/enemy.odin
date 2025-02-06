@@ -76,8 +76,8 @@ spawn_enemy :: proc(pos: Vec2) {
 }
 
 spawn_enemy_random :: proc() {
-	x := rand.float32_range(-100, 500)
-	y := rand.float32_range(-100, 500)
+	x := rand.float32_range(-1000, 2000)
+	y := rand.float32_range(-1000, 2000)
 	spawn_enemy({x, y})
 
 }

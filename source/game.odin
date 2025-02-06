@@ -36,9 +36,10 @@ _ :: fmt
 Vec2 :: rl.Vector2
 Rect :: rl.Rectangle
 
-MAX_BULLETS :: 50
-MAX_ENEMIES :: 50
-INIT_ENEMIES_COUNT :: 10
+MAX_BULLETS :: 500
+MAX_ENEMIES :: 500
+MAX_PARTICLES :: 100
+INIT_ENEMIES_COUNT :: 100
 PIXEL_WINDOW_HEIGHT :: 800
 
 Mu_State :: struct {

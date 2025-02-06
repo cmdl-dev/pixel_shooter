@@ -6,7 +6,7 @@ import rl "vendor:raylib"
 
 /**
 TODO: Create a gatherable item that the player can use for power ups
-TODO: Create a power that shoots 3 bullets at once
+TODO: Create that these power ups are self contained
 */
 
 PowerUp :: struct {
@@ -147,9 +147,20 @@ player_get_speed :: proc(player: Player) -> f32 {
 }
 
 player_center :: proc(player: Player) -> Vec2 {
-
 	return {player.pos.x + (player.size / 2), player.pos.y + (player.size / 2)}
+}
 
+player_shoot :: proc(player: Player) {
+
+	mPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), game_camera())
+	bulletPos := linalg.normalize0(mPos - g_mem.player.pos)
+
+	spawn_bullet(player_center(g_mem.player), bulletPos, 6)
+
+	if .SpreadFire in player.shootingStats.powerUps {
+		spawn_bullet(player_center(g_mem.player), rotateVector(bulletPos, 10), 6)
+		spawn_bullet(player_center(g_mem.player), rotateVector(bulletPos, -10), 6)
+	}
 }
 
 update_player :: proc(player: ^Player, dt: f32) {
@@ -160,14 +171,7 @@ update_player :: proc(player: ^Player, dt: f32) {
 
 	if player.shooting && shootingSats_readyToShoot(player.shootingStats) {
 		player.shootingStats.readyToShoot = false
-		mPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), game_camera())
-		bulletPos := linalg.normalize0(mPos - g_mem.player.pos)
-		spawn_bullet(player_center(g_mem.player), bulletPos, 6)
-		if .SpreadFire in player.shootingStats.powerUps {
-			spawn_bullet(player_center(g_mem.player), rotateVector(bulletPos, 10), 6)
-			spawn_bullet(player_center(g_mem.player), rotateVector(bulletPos, -10), 6)
-		}
-
+		player_shoot(player^)
 	}
 
 	if len(player.shootingStats.powerUpsCooldown) > 0 {

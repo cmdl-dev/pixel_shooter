@@ -14,6 +14,13 @@ Particle :: struct {
 }
 
 
+getNextParticleId :: proc() -> int {
+	@(static) BID := 0
+	maxId := MAX_PARTICLES
+
+	BID += 1
+	return BID % maxId
+}
 init_particle :: proc(pos: Vec2) -> Particle {
 
 
@@ -22,7 +29,7 @@ init_particle :: proc(pos: Vec2) -> Particle {
 		opacity = 1,
 		size = 4,
 		position = pos,
-		velocity = {rand.float32_range(-10, 10), rand.float32_range(-10, 10)},
+		velocity = {rand.float32_range(-7, 7), rand.float32_range(-7, 7)},
 		acc = {0, 0.5},
 	}
 }
@@ -45,9 +52,10 @@ draw_particle :: proc(p: Particle) {
 }
 
 spawn_bunch_particles :: proc(num: i32, pos: Vec2) {
-	for i in 0 ..= num {
+	for _ in 0 ..= num {
 		p := init_particle(pos)
-		g_mem.particles[i] = p
+		id := getNextParticleId()
+		g_mem.particles[id] = p
 	}
 }
 
